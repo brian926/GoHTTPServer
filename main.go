@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
 	"os"
 )
+
+func getLinesChannel(f io.ReadCloser) <-chan string
 
 func main() {
 	file, err := os.Open("messages.txt")
@@ -13,13 +16,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	buffer := make([]byte, 8)
+	line := ""
 	for {
+		buffer := make([]byte, 8)
 		bytesRead, err := file.Read(buffer)
 
-		if bytesRead > 0 {
-			fmt.Printf("read: %s\n", string(buffer[:bytesRead]))
+		buffer = buffer[:bytesRead]
+
+		if i := bytes.IndexByte(buffer, '\n'); i != -1 {
+			line += string(buffer[:i])
+			//fmt.Printf("read: %s\n", line)
+			buffer = buffer[i+1:]
+			line = ""
 		}
+
+		line += string(buffer)
 
 		if err != nil {
 			if err == io.EOF {
